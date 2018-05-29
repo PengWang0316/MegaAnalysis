@@ -1,7 +1,23 @@
-const MEGA_REGX = /<tr class.+?<td class="dates">(.+?)<\/td>.+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?<\/tr>/g;
+const MEGA_REGX = /<tr class.+?<td class="dates">(.+?)<\/td>.+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?<\/tr>/g; // Use to get all winnig number and date from the source data.
+const YEAR_REGX = /\/(\d+)$/; // Use to get year from a date string.
 
-function analysis(mageData) {
-  console.log(mageData);
+function analyze(mageData) {
+  const result = { all: { megaBall: {}, balls: {} } };
+  mageData.forEach(data => {
+    const year = YEAR_REGX.exec(data.date)[1];
+    if (!result[year]) result[year] = { megaBall: {}, balls: {} }; // Initalize if this year's data is still empty.
+
+    // Start to get mega ball data
+    result[year].megaBall[data.megaBall] = result[year].megaBall[data.megaBall] ? result[year].megaBall[data.megaBall] + 1 : 1;
+    result.all.megaBall[data.megaBall] = result.all.megaBall[data.megaBall] ? result.all.megaBall[data.megaBall] + 1 : 1;
+
+    //Start to get balls data
+    data.balls.forEach(ball => {
+      result[year].balls[ball] = result[year].balls[ball]  ? result[year].balls[ball] + 1 : 1;
+      result.all.balls[ball] = result.all.balls[ball]  ? result.all.balls[ball] + 1 : 1;
+    });
+  });
+  console.log(result);
 }
 
 function getMegaDataArray(megaData) {
@@ -13,7 +29,7 @@ function getMegaDataArray(megaData) {
     megaBall: match[7],
     megaplier: match[8]
   });
-  return reslut;
+  return result;
 }
 
 
@@ -22,8 +38,5 @@ function getMegaDataArray(megaData) {
  * Otherwise, fetch all data and store in the localStorage.
  */
 $(document).ready(() => {
-  const megaDataArray = getMegaDataArray(megaData);
-  const balls = {};
-  const megaBalls = {};
-
+  analyze(getMegaDataArray(megaData));
 });
