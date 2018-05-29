@@ -17,7 +17,36 @@ function analyze(mageData) {
       result.all.balls[ball] = result.all.balls[ball]  ? result.all.balls[ball] + 1 : 1;
     });
   });
-  console.log(result);
+  return result;
+}
+
+function generateHtmlText(megaData) {
+  let htmlText = ''; // internal html text.
+  Object.keys(megaData).forEach(yearLable => {
+    let ballsHtml = '';
+    let megaBallsHtml = '';
+    //Get a sorted key array for the balls object.
+    const ballsSortingKeys = Object.keys(megaData[yearLable].balls)
+      .sort((pervious, next) => megaData[yearLable].balls[pervious] - megaData[yearLable].balls[next]);
+    // Assembling the html text for balls data
+    ballsSortingKeys.forEach(key => ballsHtml += `<span class="mr-3 ball">${key}<span class="badge badge-primary small ml-1">${megaData[yearLable].balls[key]}</span></span>`);
+
+    //Get a sorted key array for the mega balls object.
+    const megaBallsSortingKeys = Object.keys(megaData[yearLable].megaBall)
+      .sort((pervious, next) => megaData[yearLable].megaBall[pervious] - megaData[yearLable].megaBall[next]);
+    // Assembling the html text for balls data
+    megaBallsSortingKeys.forEach(key => megaBallsHtml += `<span class="mr-3 ball">${key}<span class="badge badge-primary small ml-1">${megaData[yearLable].megaBall[key]}</span></span>`);
+
+    // Assembling html text
+    htmlText += `<div class="d-flex mt-4">
+                    <div class="mr-4">${yearLable}</div>
+                    <div>
+                      <div class="d-flex mb-3"><div class="mr-3">Balls: </div><div>${ballsHtml}</div></div>
+                      <div class="d-flex"><div class="mr-3">MegaBalls: </div><div>${megaBallsHtml}</div></div>
+                    </div>
+                  </div>`;
+  });
+  return htmlText;
 }
 
 function getMegaDataArray(megaData) {
@@ -32,11 +61,11 @@ function getMegaDataArray(megaData) {
   return result;
 }
 
-
 /**
  * If the Mage data has already been fetched and stored in the localStorage, analyze them directly.
  * Otherwise, fetch all data and store in the localStorage.
  */
 $(document).ready(() => {
-  analyze(getMegaDataArray(megaData));
+  const htmlText = generateHtmlText(analyze(getMegaDataArray(megaData)));
+  $('#showDiv').html(htmlText);
 });
