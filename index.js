@@ -1,11 +1,23 @@
 const MEGA_REGX = /<tr class.+?<td class="dates">(.+?)<\/td>.+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?<\/tr>/g; // Use to get all winnig number and date from the source data.
 const YEAR_REGX = /\/(\d+)$/; // Use to get year from a date string.
 
+function getEmptyBallsObject() {
+  const balls = {};
+  for (let i = 1; i <= 70; i++) balls[i] = 0;
+  return balls;
+}
+
+function getEmptyMegaBallsObject() {
+  const megaBalls = {};
+  for (let i = 1; i <= 25; i++) megaBalls[i] = 0;
+  return megaBalls;
+}
+
 function analyze(mageData) {
-  const result = { all: { megaBall: {}, balls: {} } };
+  const result = { all: { megaBall: getEmptyMegaBallsObject(), balls: getEmptyBallsObject() } };
   mageData.forEach(data => {
     const year = YEAR_REGX.exec(data.date)[1];
-    if (!result[year]) result[year] = { megaBall: {}, balls: {} }; // Initalize if this year's data is still empty.
+    if (!result[year]) result[year] = { megaBall: getEmptyMegaBallsObject(), balls: getEmptyBallsObject() }; // Initalize if this year's data is still empty.
 
     // Start to get mega ball data
     result[year].megaBall[data.megaBall] = result[year].megaBall[data.megaBall] ? result[year].megaBall[data.megaBall] + 1 : 1;
@@ -13,8 +25,8 @@ function analyze(mageData) {
 
     //Start to get balls data
     data.balls.forEach(ball => {
-      result[year].balls[ball] = result[year].balls[ball]  ? result[year].balls[ball] + 1 : 1;
-      result.all.balls[ball] = result.all.balls[ball]  ? result.all.balls[ball] + 1 : 1;
+      result[year].balls[ball] = result[year].balls[ball] ? result[year].balls[ball] + 1 : 1;
+      result.all.balls[ball] = result.all.balls[ball] ? result.all.balls[ball] + 1 : 1;
     });
   });
   return result;
