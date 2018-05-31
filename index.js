@@ -77,7 +77,7 @@ function getMegaDataArray(megaData) {
 
 function drawCharts() {
   const dataTableArray = [];
-  Object.keys(megaObject.all.balls).forEach(key => dataTableArray.push([key * 1, megaObject.all.balls[key], megaObject['2018'].balls[key]]));
+  Object.keys(megaObject.all.balls).forEach(key => dataTableArray.push([key * 1, megaObject.all.balls[key], megaObject['2018'].balls[key] ? megaObject['2018'].balls[key] : 0]));
   const data = new google.visualization.DataTable();
   data.addColumn('number', 'Balls number');
   data.addColumn('number', 'All year');
