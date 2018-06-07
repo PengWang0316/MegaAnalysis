@@ -1,7 +1,10 @@
 const MEGA_REGX = /<tr class.+?<td class="dates">(.+?)<\/td>.+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?(\d+).+?<\/tr>/g; // Use to get all winnig number and date from the source data.
-const YEAR_REGX = /\/(\d+)$/; // Use to get year from a date string.
+const POWERBALL_REGX = /<tr><td>(.+?)<\/td><td>(\d+?)<\/td><td>(\d+?)<\/td><td>(\d+?)<\/td><td>(\d+?)<\/td><td>(\d+?)<\/td><td class="red">(\d+?)<\/td>.+?<\/tr>/g;
+const MEGA_YEAR_REGX = /\/(\d+)$/; // Use to get year from a date string.
+const POWERBALL_YEAR_REGX = /,\s(\d+)$/;
 
 let megaObject;
+let powerballObject;
 
 function getEmptyBallsObject() {
   const balls = {};
@@ -11,14 +14,14 @@ function getEmptyBallsObject() {
 
 function getEmptyMegaBallsObject() {
   const megaBalls = {};
-  for (let i = 1; i <= 25; i++) megaBalls[i] = 0;
+  for (let i = 1; i <= 26; i++) megaBalls[i] = 0;
   return megaBalls;
 }
 
-function analyze(mageData) {
+function analyze(mageData, yearRegx) {
   const result = { all: { megaBall: getEmptyMegaBallsObject(), balls: getEmptyBallsObject() } };
   mageData.forEach(data => {
-    const year = YEAR_REGX.exec(data.date)[1];
+    const year = yearRegx.exec(data.date)[1];
     if (!result[year]) result[year] = { megaBall: getEmptyMegaBallsObject(), balls: getEmptyBallsObject() }; // Initalize if this year's data is still empty.
 
     // Start to get mega ball data
@@ -63,10 +66,10 @@ function generateHtmlText(megaData) {
   return htmlText;
 }
 
-function getMegaDataArray(megaData) {
+function getMegaDataArray(megaData, regx) {
   const result = [];
   let match;
-  while (match = MEGA_REGX.exec(megaData)) result.push({
+  while (match = regx.exec(megaData)) result.push({
     date: match[1],
     balls: [match[2], match[3], match[4], match[5], match[6]],
     megaBall: match[7],
@@ -75,9 +78,9 @@ function getMegaDataArray(megaData) {
   return result;
 }
 
-function drawCharts() {
+function drawCharts(dataObject, chartA, chartB) {
   const dataTableArray = [];
-  Object.keys(megaObject.all.balls).forEach(key => dataTableArray.push([key * 1, megaObject.all.balls[key], megaObject['2018'].balls[key] ? megaObject['2018'].balls[key] : 0]));
+  Object.keys(dataObject.all.balls).forEach(key => dataTableArray.push([key * 1, dataObject.all.balls[key], dataObject['2018'].balls[key] ? dataObject['2018'].balls[key] : 0]));
   const data = new google.visualization.DataTable();
   data.addColumn('number', 'Balls number');
   data.addColumn('number', 'All year');
@@ -99,12 +102,12 @@ function drawCharts() {
     }
   };
 
-  const ballsChart = new google.visualization.ScatterChart(document.getElementById('chart_div'));
+  const ballsChart = new google.visualization.ScatterChart(document.getElementById(chartA));
 
   ballsChart.draw(data, options);
 
   dataTableArray.length = 0;
-  Object.keys(megaObject.all.megaBall).forEach(key => dataTableArray.push([key * 1, megaObject.all.megaBall[key], megaObject['2018'].megaBall[key] ? megaObject['2018'].megaBall[key] : 0]));
+  Object.keys(dataObject.all.megaBall).forEach(key => dataTableArray.push([key * 1, dataObject.all.megaBall[key], dataObject['2018'].megaBall[key] ? dataObject['2018'].megaBall[key] : 0]));
   // console.log(dataTableArray);
   const megaData = new google.visualization.DataTable();
   megaData.addColumn('number', 'MegaBall number');
@@ -127,7 +130,7 @@ function drawCharts() {
     }
   };
 
-  const megaBallsChart = new google.visualization.ScatterChart(document.getElementById('mega_chart_div'));
+  const megaBallsChart = new google.visualization.ScatterChart(document.getElementById(chartB));
 
   megaBallsChart.draw(megaData, megaOptions);
 
@@ -139,9 +142,13 @@ function drawCharts() {
  * Otherwise, fetch all data and store in the localStorage.
  */
 $(document).ready(() => {
-  megaObject = analyze(getMegaDataArray(megaData));
+  megaObject = analyze(getMegaDataArray(megaData, MEGA_REGX), MEGA_YEAR_REGX);
   const htmlText = generateHtmlText(megaObject);
-  $('#showDiv').html(htmlText);
+  $('#megaDiv').html(htmlText);
   google.charts.load('current', {'packages':['corechart']});
-  google.charts.setOnLoadCallback(drawCharts);
+  google.charts.setOnLoadCallback(() => drawCharts(megaObject, 'mega_number_chart_div', 'mega_ball_chart_div'));
+
+  powerballObject = analyze(getMegaDataArray(powerballData, POWERBALL_REGX), POWERBALL_YEAR_REGX);
+  $('#powerballDiv').html(generateHtmlText(powerballObject));
+  google.charts.setOnLoadCallback(() => drawCharts(powerballObject, 'powerball_number_chart_div', 'powerball_ball_chart_div'));
 });
